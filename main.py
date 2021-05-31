@@ -26,6 +26,7 @@ app = Flask(__name__)
 @app.route('/detect/<device_id>', methods=['POST','GET'])
 def upload(device_id):
     try:
+        os.system('mkdir {}/{}'.format(files_path, device_id))
         file = request.get_json()['image']
         nparr = np.array(file, dtype=np.uint8)
         names, predictions = detect(device_id, nparr)
@@ -139,15 +140,25 @@ def encode_images(device_id):
 def recognize_image(device_id, image):
     print("[INFO] loading encodings...")
     encoding_path = '{}/{}'.format(files_path, device_id)
-    data = pickle.loads(open("{}/encoding.pickle".format(encoding_path), "rb").read())
+    encoding_found = os.path.isfile("{}/encoding.pickle".format(encoding_path))
+    if encoding_found:
+        data = pickle.loads(open("{}/encoding.pickle".format(encoding_path), "rb").read())
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     print("[INFO] recognizing faces...")
     boxes = face_recognition.face_locations(rgb,
         model="cnn")
-    encodings = face_recognition.face_encodings(rgb, boxes)
-
+     
     names = []
+    if not encoding_found:
+        for box in boxes:
+            names.append("Unknown")
+        print("No encoding")
+        print(boxes)
+        print(names)
+        return boxes, names
+
+    encodings = face_recognition.face_encodings(rgb, boxes)
 
     for encoding in encodings:
         matches = face_recognition.compare_faces(data["encodings"],
