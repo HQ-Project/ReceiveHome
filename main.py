@@ -49,7 +49,7 @@ def upload(device_id):
 @app.route("/register/<device_id>/<user_id>", methods=['get', 'post'])
 def register(device_id, user_id):
     try:
-        file  = request.files['imageFile']
+        file  = request.files['file']
         nparr = np.fromstring(file.read(), np.uint8)
         nparr = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         device_file_path = '{}/{}'.format(files_path, device_id)
@@ -61,11 +61,11 @@ def register(device_id, user_id):
         max_dim = max(h,w)
         if max_dim > 900:
             if max_dim == h:
-                h = 900
                 w = int(900 * w / h) 
+                h = 900
             else:
-                w = 900
                 h = int(900 * h / w)
+                w = 900
         img = cv2.resize(nparr, (w,h), interpolation = cv2.INTER_AREA)
         filename = '{}/dataset/{}/photo_{}.jpg'.format(device_file_path, user_id, time.time())
         cv2.imwrite(filename, img)
